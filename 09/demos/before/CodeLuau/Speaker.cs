@@ -28,13 +28,6 @@ namespace CodeLuau
 		public RegisterResponse Register(IRepository repository)
 		{
 			int? speakerId = null;
-			bool good = false;
-			bool appr = false;
-			var ot = new List<string>() { "Cobol", "Punch Cards", "Commodore", "VBScript" };
-
-			//DEFECT #5274 DA 12/10/2012
-			//We weren't filtering out the prodigy domain so I added it.
-			var domains = new List<string>() { "aol.com", "prodigy.com", "compuserve.com" };
 
 			if (!string.IsNullOrWhiteSpace(FirstName))
 			{
@@ -45,14 +38,16 @@ namespace CodeLuau
 						//put list of employers in array
 						var emps = new List<string>() { "Pluralsight", "Microsoft", "Google" };
 
-						good = Exp > 10 || HasBlog || Certifications.Count() > 3 || emps.Contains(Employer);
+						bool good = Exp > 10 || HasBlog || Certifications.Count() > 3 || emps.Contains(Employer);
 
 						if (!good)
 						{
 							//need to get just the domain from the email
 							string emailDomain = Email.Split('@').Last();
 
-							if (!domains.Contains(emailDomain) && (!(Browser.Name == WebBrowser.BrowserName.InternetExplorer && Browser.MajorVersion < 9)))
+                            var domains = new List<string>() { "aol.com", "prodigy.com", "compuserve.com" };
+
+                            if (!domains.Contains(emailDomain) && (!(Browser.Name == WebBrowser.BrowserName.InternetExplorer && Browser.MajorVersion < 9)))
 							{
 								good = true;
 							}
@@ -60,11 +55,15 @@ namespace CodeLuau
 
 						if (good)
 						{
-							if (Sessions.Count() != 0)
+                            bool appr = false;
+
+                            if (Sessions.Count() != 0)
 							{
 								foreach (var session in Sessions)
 								{
-									foreach (var tech in ot)
+                                    var ot = new List<string>() { "Cobol", "Punch Cards", "Commodore", "VBScript" };
+
+                                    foreach (var tech in ot)
 									{
 										if (session.Title.Contains(tech) || session.Description.Contains(tech))
 										{

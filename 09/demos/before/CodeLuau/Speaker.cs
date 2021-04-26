@@ -27,47 +27,39 @@ namespace CodeLuau
 		/// <returns>speakerID</returns>
 		public RegisterResponse Register(IRepository repository)
 		{
-			int? speakerId = null;
-
-            var error = ValidateData();
+            var error = ValidateRegistration();
             if (error != null) return new RegisterResponse(error);
-
-            bool speakerAppearsQualified = AppearsExceptional() || !HasNoObviousRedFlag();
-
-            if (!speakerAppearsQualified) {
-                return new RegisterResponse(RegisterError.SpeakerDoesNotMeetStandards);
-
-            }
-
-            bool atLeastOnSessionApproved = ApprovedSessions();
-
-            if (atLeastOnSessionApproved) {
-
-
-
-                //Now, save the speaker and sessions to the db.
-                try {
-                    speakerId = repository.SaveSpeaker(this);
-                } catch (Exception e) {
-                    //in case the db call fails 
-                }
-            } else {
-                return new RegisterResponse(RegisterError.NoSessionsApproved);
-            }
-            
-
-            //if we got this far, the speaker is registered.
+			int? speakerId = repository.SaveSpeaker(this);
             return new RegisterResponse((int)speakerId);
 		}
 
+        private RegisterError? ValidateRegistration ()
+        {
+            var error = ValidateData();
+            if (error != null) return error;
+
+            bool speakerAppearsQualified = AppearsExceptional() || !HasNoObviousRedFlag();
+
+            if (!speakerAppearsQualified)
+            {
+                return RegisterError.SpeakerDoesNotMeetStandards;
+
+            }
+            bool atLeastOnSessionApproved = ApprovedSessions();
+            if (!atLeastOnSessionApproved) return RegisterError.NoSessionsApproved;
+            return null;
+        }
+
         private bool ApprovedSessions() 
         {
-            foreach (var session in Sessions) {
+            foreach (var session in Sessions)
+            {
                 session.Approved = !SessionIsAboutOldTechnology(session);
             }
 
             return Sessions.Any(s => s.Approved);
         }
+
         private bool SessionIsAboutOldTechnology(Session session) {
             var oldTechnologies = new List<string>() { "Cobol", "Punch Cards", "Commodore", "VBScript" };
             foreach (var tech in oldTechnologies) {
